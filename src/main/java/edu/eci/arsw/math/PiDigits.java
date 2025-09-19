@@ -28,16 +28,40 @@ public class PiDigits {
     public static byte[] getDigits(int totalDigits, int nThreads) throws InterruptedException {
         byte[] digits = new byte[totalDigits];
         int range = totalDigits / nThreads;
+        AtomicBoolean paused = new AtomicBoolean(false);
         List<PiDigitsThread> threads = new ArrayList<>();
 
         for (int i = 0; i < nThreads; i++) {
             int start = i * range;
             int end = (i == nThreads - 1) ? totalDigits : start + range;
-            PiDigitsThread thread = new PiDigitsThread(start, end, digits);
+            PiDigitsThread thread = new PiDigitsThread(start, end, digits, paused);
             threads.add(thread);
             thread.start();
         }
-
+    
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            Thread.sleep(5000);
+            paused.set(true);
+            System.out.println("Enter to resume...");
+            scanner.nextLine();
+            paused.set(false);
+            synchronized (paused) {
+                paused.notifyAll();
+            }
+    
+            boolean allDone = true;
+            for (PiDigitsThread thread : threads) {
+                if (thread.isAlive()) {
+                    allDone = false;
+                    break;
+                }
+            }
+            if (allDone) {
+                break;
+            }
+        }
+        
         for (PiDigitsThread thread : threads) {
             thread.join();
         }
