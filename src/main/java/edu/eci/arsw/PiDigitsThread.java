@@ -1,5 +1,7 @@
 package edu.eci.arsw;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class PiDigitsThread extends Thread {
     private final int start;
     private final int end;
